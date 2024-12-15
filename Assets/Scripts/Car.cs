@@ -8,7 +8,9 @@ public class Car : MonoBehaviour {
     [SerializeField] private WheelCollider fl,fr,bl,br;
     [SerializeField] private Transform fl_tire,fr_tire,bl_tire,br_tire;
     [SerializeField] private float maxSteeringAngle = 42f;
+    [SerializeField] private float steeringLockLimit = 20f;
     [SerializeField] private AnimationCurve brakingCurve;
+    [SerializeField] private float brakingPower;
     [SerializeField] private bool isAWD = false;
     [SerializeField] private bool autoCenterSteering = false;
 
@@ -21,6 +23,7 @@ public class Car : MonoBehaviour {
     private float currentSteering = 0.0f;
     private float steeringLock;
     private Rigidbody rb;
+    private Transform tf;
     private void Start() {
         trans.Gear = 0;
         engine.Init();
@@ -34,7 +37,8 @@ public class Car : MonoBehaviour {
         };
 
         allWheels.ForEach(w => w.brakeTorque = 0.0f);
-        rb = GetComponent<Rigidbody>();
+        rb = GetComponent<Rigidbody>(); 
+        tf = transform;
     }
 
     private void Update() {
@@ -68,9 +72,12 @@ public class Car : MonoBehaviour {
             currentSteering = Mathf.Lerp(currentSteering, 0, Time.deltaTime * 5.0f);
         }
         
+        float fwdVel = Vector3.Dot(rb.linearVelocity, tf.forward);
+        steeringLock = Mathf.Clamp(Mathf.Abs(steeringLockLimit - fwdVel), 0, steeringLockLimit) * maxSteeringAngle / steeringLockLimit; 
+
         float wheelBase = Vector3.Distance(fl_tire.position, br_tire.position);
         float trackWidth = Vector3.Distance(fl_tire.position, fr_tire.position);
-        float turningRadius = wheelBase / Mathf.Tan(maxSteeringAngle * currentSteering * Mathf.Deg2Rad);
+        float turningRadius = wheelBase / Mathf.Tan(steeringLock * currentSteering * Mathf.Deg2Rad);
 
         float innerAckAngle = Mathf.Atan(wheelBase / (turningRadius - trackWidth * 0.5f));
         float outerAckAngle = Mathf.Atan(wheelBase / (turningRadius + trackWidth * 0.5f));
@@ -104,7 +111,7 @@ public class Car : MonoBehaviour {
         br.GetWorldPose(out Vector3 posbr, out Quaternion quatbr);
         br_tire.SetPositionAndRotation(posbr, quatbr);
 
-        speedoText.text = $"{rb.linearVelocity.magnitude * 3.6:##.#} Kmph";
+        //speedoText.text = $"{rb.linearVelocity.magnitude * 3.6:##.#} Kmph";
     }
     private void FixedUpdate() {
         float totalDriveTorque = trans.GetDriveTorque(engine);
@@ -124,12 +131,12 @@ public class Car : MonoBehaviour {
         float flTraction = 1f - Mathf.Clamp01(Mathf.Abs(flHit.forwardSlip));
         float frTraction = 1f - Mathf.Clamp01(Mathf.Abs(frHit.forwardSlip));
 
-        float commonBreakForce = brakePos * 1000.0f * brakingCurve.Evaluate(flTraction);
+        float commonBreakForce = brakePos * brakingPower * brakingCurve.Evaluate(flTraction);
         fl.brakeTorque = Mathf.Abs(fl.rpm) < 0.1f && Vector3.Dot(rb.linearVelocity, flHit.forwardDir) > 0.01f ? 0.0f : commonBreakForce;
         fr.brakeTorque = Mathf.Abs(fr.rpm) < 0.1f && Vector3.Dot(rb.linearVelocity, frHit.forwardDir) > 0.01f ? 0.0f : commonBreakForce;
 
-        float avgDiffRPM = (bl.rpm * tractionL + br.rpm * tractionR) / totalTraction;
-        engine.RPM = Mathf.Lerp(engine.RPM, trans.DifferentialToEngineRPM(avgDiffRPM), Time.fixedDeltaTime * 5.0f);
-        text.SetText($"RPM: {engine.RPM:0000} {rlHit.forwardSlip:0.00} {rlHit.sidewaysSlip:0.00}");
+        float avgDiffRPM = (bl.rpm * tractionL + br.rpm * tractionR) * 0.5f / totalTraction;
+        engine.RPM = Mathf.Lerp(engine.RPM, trans.DifferentialToEngineRPM(avgDiffRPM), Time.fixedDeltaTime);
+        speedoText.SetText($"RPM: {engine.RPM:0000} ET:{engine.generatedTorque:#####} WT:{totalDriveTorque:#####}");
     }
 }

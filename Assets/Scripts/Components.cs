@@ -4,11 +4,6 @@ using System;
 using Unity.VisualScripting;
 
 [Serializable]
-public class DummyClass{
-    public float dummy;
-}
-
-[Serializable]
 public class EngineComponent {
     public float maxRPM;
     public float maxPower;
@@ -41,9 +36,9 @@ public class EngineComponent {
         generatedTorque = GetEngineTorque(RPM);
     }
 
-    [DoNotSerialize] public float RPM {get; set;}
-    [DoNotSerialize] public float Throttle {get;set;}
-    private float generatedTorque;
+    public float RPM {get; set;}
+    public float Throttle {get;set;}
+    public float generatedTorque;
 }
 
 [Serializable]
