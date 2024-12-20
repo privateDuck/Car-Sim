@@ -3,12 +3,15 @@ using UnityEngine;
 using TMPro;
 
 public class Car : MonoBehaviour {
-    [SerializeField] private TransComponent trans;
-    [SerializeField] private EngineComponent engine;
+    [SerializeField] private CarDynamics dynamics;
     [SerializeField] private WheelCollider fl,fr,bl,br;
     [SerializeField] private Transform fl_tire,fr_tire,bl_tire,br_tire;
-    [SerializeField] private float maxSteeringAngle = 42f;
-    [SerializeField] private float steeringLockLimit = 20f;
+    [SerializeField] private Transform centerOfMassTransform;
+    [SerializeField] private float antiRoll;
+    [SerializeField] private float maxSteeringAngle = 30f;
+    [SerializeField] private float steeringLockLimit = 10f;
+    [SerializeField] private float steeringLockEngageSpeed = 20f;
+    [SerializeField] private float steeringLockMaxSpeed = 30f;
     [SerializeField] private AnimationCurve brakingCurve;
     [SerializeField] private float brakingPower;
     [SerializeField] private bool isAWD = false;
@@ -25,9 +28,7 @@ public class Car : MonoBehaviour {
     private Rigidbody rb;
     private Transform tf;
     private void Start() {
-        trans.Gear = 0;
-        engine.Init();
-        trans.SetClutch(0.0f);
+        dynamics.Init();
         allWheels = new()
         {
             fl,
@@ -38,6 +39,7 @@ public class Car : MonoBehaviour {
 
         allWheels.ForEach(w => w.brakeTorque = 0.0f);
         rb = GetComponent<Rigidbody>(); 
+       // rb.centerOfMass -= centerOfMassTransform.position;
         tf = transform;
     }
 
@@ -55,15 +57,14 @@ public class Car : MonoBehaviour {
             brakePos -= Time.deltaTime * 2.0f;
         }
 
-        trans.SetClutch(Input.GetKey(KeyCode.C) ? 1.0f : 0.0f);
-        if(Input.GetKeyDown(KeyCode.LeftShift)) trans.Gear++;
-        if (Input.GetKeyDown(KeyCode.LeftControl)) trans.Gear--;
+        if (Input.GetKey(KeyCode.C)) dynamics.clutchPosition = 0.0f; else dynamics.clutchPosition = 1.0f;
+        if(Input.GetKeyDown(KeyCode.LeftShift)) dynamics.ShiftUp();
+        if (Input.GetKeyDown(KeyCode.LeftControl)) dynamics.ShiftDown();
 
         throttlePos = Mathf.Clamp01(throttlePos);
         brakePos = Mathf.Clamp01(brakePos);
 
-        engine.Throttle = throttlePos;
-        engine.UpdateEngine();
+        dynamics.throttlePos = throttlePos;
 
         float steerInput = Input.GetAxis("Horizontal");
         currentSteering += steerInput * Time.deltaTime * 5.0f;
@@ -72,8 +73,8 @@ public class Car : MonoBehaviour {
             currentSteering = Mathf.Lerp(currentSteering, 0, Time.deltaTime * 5.0f);
         }
         
-        float fwdVel = Vector3.Dot(rb.linearVelocity, tf.forward);
-        steeringLock = Mathf.Clamp(Mathf.Abs(steeringLockLimit - fwdVel), 0, steeringLockLimit) * maxSteeringAngle / steeringLockLimit; 
+        float fwdRatio = Mathf.Max(Mathf.Abs(Vector3.Dot(rb.linearVelocity, tf.forward)) - steeringLockEngageSpeed, 0)/steeringLockMaxSpeed;
+        steeringLock = Mathf.Lerp(maxSteeringAngle, steeringLockLimit, fwdRatio);
 
         float wheelBase = Vector3.Distance(fl_tire.position, br_tire.position);
         float trackWidth = Vector3.Distance(fl_tire.position, fr_tire.position);
@@ -82,21 +83,16 @@ public class Car : MonoBehaviour {
         float innerAckAngle = Mathf.Atan(wheelBase / (turningRadius - trackWidth * 0.5f));
         float outerAckAngle = Mathf.Atan(wheelBase / (turningRadius + trackWidth * 0.5f));
 
-        Quaternion leftTire, rightTire;
         float leftAngle, rightAngle;
         // if currentSteering > 0: turning right
         // if currentSteering < 0: turning left
         if (currentSteering > 0){
-            leftTire = Quaternion.Euler(new Vector3(0, Mathf.Rad2Deg * outerAckAngle, 0)); // left front wheel
-            leftAngle = Mathf.Rad2Deg * outerAckAngle;
-            rightTire = Quaternion.Euler(new Vector3(0, Mathf.Rad2Deg * innerAckAngle, 0)); // right front wheel
-            rightAngle = Mathf.Rad2Deg * innerAckAngle;
+            leftAngle = Mathf.Rad2Deg * outerAckAngle; // left front wheel
+            rightAngle = Mathf.Rad2Deg * innerAckAngle; // right front wheel
         }
         else{
-            leftTire = Quaternion.Euler(new Vector3(0, Mathf.Rad2Deg * innerAckAngle, 0)); // left front wheel
-            leftAngle = Mathf.Rad2Deg * innerAckAngle;
-            rightTire = Quaternion.Euler(new Vector3(0, Mathf.Rad2Deg * outerAckAngle, 0)); // right front wheel
-            rightAngle = Mathf.Rad2Deg * outerAckAngle;
+            leftAngle = Mathf.Rad2Deg * innerAckAngle; // left front wheel
+            rightAngle = Mathf.Rad2Deg * outerAckAngle; // right front wheel
         }
 
         fl.steerAngle = leftAngle;
@@ -114,29 +110,51 @@ public class Car : MonoBehaviour {
         //speedoText.text = $"{rb.linearVelocity.magnitude * 3.6:##.#} Kmph";
     }
     private void FixedUpdate() {
-        float totalDriveTorque = trans.GetDriveTorque(engine);
-        bl.GetGroundHit(out WheelHit rlHit);
-        br.GetGroundHit(out WheelHit rrHit);
+        bool blGrounded = bl.GetGroundHit(out WheelHit rlHit);
+        bool brGrounded = br.GetGroundHit(out WheelHit rrHit);
+        bool flGrounded = fl.GetGroundHit(out WheelHit flHit);
+        bool frGrounded = fr.GetGroundHit(out WheelHit frHit);
+        
+        if (rb.linearVelocity.sqrMagnitude > 25.0f){
+        
+            float travelBL = 1.0f, travelBR = 1.0f;
+            float travelFL = 1.0f, travelFR = 1.0f;
 
+            if (blGrounded)
+                travelBL = (-bl_tire.InverseTransformPoint(rlHit.point).y - bl.radius)/bl.suspensionDistance;
+            if (brGrounded)
+                travelBR = (-br_tire.InverseTransformPoint(rrHit.point).y - br.radius)/br.suspensionDistance;
+
+            float antiRollForceBack = (travelBL - travelBR) * antiRoll;
+            
+            if (flGrounded)
+                travelFL = (-fl_tire.InverseTransformPoint(flHit.point).y - fl.radius)/fl.suspensionDistance;
+            if (frGrounded)
+                travelFR = (-fr_tire.InverseTransformPoint(frHit.point).y - fr.radius)/fr.suspensionDistance;
+
+            float antiRollForceFront = (travelFL - travelFR) * antiRoll;
+            
+            if (blGrounded) rb.AddForceAtPosition(bl_tire.up * antiRollForceBack, bl_tire.position);
+            if (brGrounded) rb.AddForceAtPosition(br_tire.up * antiRollForceBack, br_tire.position);
+
+            if (flGrounded) rb.AddForceAtPosition(fl_tire.up * antiRollForceFront, fl_tire.position);
+            if (frGrounded) rb.AddForceAtPosition(fr_tire.up * antiRollForceFront, fr_tire.position);
+
+        }
         float tractionL = 1f - Mathf.Clamp01(Mathf.Abs(rlHit.forwardSlip) + Mathf.Abs(rlHit.sidewaysSlip));
         float tractionR = 1f - Mathf.Clamp01(Mathf.Abs(rrHit.forwardSlip) + Mathf.Abs(rrHit.sidewaysSlip));
         float totalTraction = Mathf.Max(tractionL + tractionR, 0.01f);
+        
+        float avgDiffRPM = (bl.rpm + br.rpm) * 0.5f;
+        float totalDriveTorque = dynamics.SimulateAndGetTorque(avgDiffRPM, Time.fixedDeltaTime);
 
-        //float flt = 0.0f,frt = 0.0f,blt = 0.0f,brt = 0.0f;
-        br.motorTorque = totalDriveTorque * tractionL / totalTraction;
-        bl.motorTorque = totalDriveTorque * tractionR / totalTraction;
+        br.motorTorque = totalDriveTorque * 0.5f;
+        bl.motorTorque = totalDriveTorque * 0.5f;
 
-        fl.GetGroundHit(out WheelHit flHit);
-        fl.GetGroundHit(out WheelHit frHit);
-        float flTraction = 1f - Mathf.Clamp01(Mathf.Abs(flHit.forwardSlip));
-        float frTraction = 1f - Mathf.Clamp01(Mathf.Abs(frHit.forwardSlip));
+        float commonBreakForce = brakePos * brakingPower;
+        fl.brakeTorque = commonBreakForce;
+        fr.brakeTorque = commonBreakForce;
 
-        float commonBreakForce = brakePos * brakingPower * brakingCurve.Evaluate(flTraction);
-        fl.brakeTorque = Mathf.Abs(fl.rpm) < 0.1f && Vector3.Dot(rb.linearVelocity, flHit.forwardDir) > 0.01f ? 0.0f : commonBreakForce;
-        fr.brakeTorque = Mathf.Abs(fr.rpm) < 0.1f && Vector3.Dot(rb.linearVelocity, frHit.forwardDir) > 0.01f ? 0.0f : commonBreakForce;
-
-        float avgDiffRPM = (bl.rpm * tractionL + br.rpm * tractionR) * 0.5f / totalTraction;
-        engine.RPM = Mathf.Lerp(engine.RPM, trans.DifferentialToEngineRPM(avgDiffRPM), Time.fixedDeltaTime);
-        speedoText.SetText($"RPM: {engine.RPM:0000} ET:{engine.generatedTorque:#####} WT:{totalDriveTorque:#####}");
+        speedoText.SetText($"RPM: {dynamics.engineRPM:0000} Gear:{dynamics.Gear:0} Clutch:{dynamics.clutchPosition:#.0}");
     }
 }
