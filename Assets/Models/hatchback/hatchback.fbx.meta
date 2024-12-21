@@ -3,7 +3,77 @@ guid: 8355ef8265e12d8499dd90f027956c7a
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: CAM
+    second: {fileID: 2100000, guid: d29fd6e751c904746ae9473b19ecdaaa, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: RimColor
+    second: {fileID: 2100000, guid: 570c3f925d9e8224aa2b6161d72bc165, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Tire
+    second: {fileID: 2100000, guid: 4eabc86ef34dca1479c206b228e8f08d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ayna
+    second: {fileID: 2100000, guid: 727491002762b48449151cba569e1d2a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: carpaint
+    second: {fileID: 2100000, guid: 00cf400577c62d34a86871945ff58c22, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: frontlight
+    second: {fileID: 2100000, guid: a52a0db6a9ebf7e48943cd218f8287ba, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: grill
+    second: {fileID: 2100000, guid: df7176b1dc59d534a9f61788495cb0eb, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: interior
+    second: {fileID: 2100000, guid: a0581605992716b43bcfa5b50aabb5a4, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: interior2
+    second: {fileID: 2100000, guid: 581618fca080467469aafeb4b4fdcf20, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: metal
+    second: {fileID: 2100000, guid: 5e6d2dc06c43fea4eb1c64d2abbe579d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: rearlight
+    second: {fileID: 2100000, guid: c2e0899ef8c6da044b613466d96b02d6, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: sinyal
+    second: {fileID: 2100000, guid: 33f04e9075dd78442a9045a9cf0ea37f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: "\xD6NFARCAM"
+    second: {fileID: 2100000, guid: 40a870565535d3f42b99fb7d3b0d0008, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: "\xF6nfar\u0131\u015F\u0131klar\u0131"
+    second: {fileID: 2100000, guid: b7ff94f2a062e5a4a89430b1bcac64eb, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
