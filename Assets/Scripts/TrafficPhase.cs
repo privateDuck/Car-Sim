@@ -11,9 +11,9 @@ public class TrafficPhase : MonoBehaviour {
     public float PhaseActiveTime = 10.0f;
     [Tooltip("Amber light time")]
     public float PhaseEndTime = 2.0f;
+    public List<MeshRenderer> mrs;
     public LightState state = LightState.None;    
     private Material material;
-    private List<MeshRenderer> mrs;
     private readonly int stateID = Shader.PropertyToID("_State");
     private readonly int powerID = Shader.PropertyToID("_Power");
     private void Start() {
@@ -21,7 +21,9 @@ public class TrafficPhase : MonoBehaviour {
         material = new Material(tmp);
         Resources.UnloadAsset(tmp);
 
-        transform.GetComponentsInChildren<MeshRenderer>(mrs);
+        foreach (var mr in mrs) {
+            mr.material = material;
+        }
     }
 
     public void ChangeLightState(LightState toState) {
