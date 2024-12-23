@@ -266,8 +266,6 @@ public class Drivetrain{
                 int targetGear = Mathf.Clamp(dt.Gear - 1, 1, dt.gearRatios.Count);
                 trans.ChangeState(new ConsiderShift(targetGear, dt.shiftDelay * 0.75f));
             }
-
-            Debug.Log($"Running: {currentWheelRPM}");
         }
     }
 

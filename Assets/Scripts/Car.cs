@@ -119,7 +119,7 @@ public class Car : MonoBehaviour {
         br.GetWorldPose(out Vector3 posbr, out Quaternion quatbr);
         br_tire.SetPositionAndRotation(posbr, quatbr);
 
-        float carSpeedKPH = fl.rpm * Mathf.PI * fl.radius * 3.6f * 0.033333f;
+        float carSpeedKPH = bl.rpm * Mathf.PI * fl.radius * 3.6f * 0.033333f;
         text.SetText($"RPM: {dt.engineRPM:0000} Speed:{carSpeedKPH:##.0} Kmph");
 
         if (dt.isShifting) gearText.text = "O";
