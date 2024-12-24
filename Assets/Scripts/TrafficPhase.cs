@@ -16,7 +16,7 @@ public class TrafficPhase : MonoBehaviour {
     private Material material;
     private readonly int stateID = Shader.PropertyToID("_State");
     private readonly int powerID = Shader.PropertyToID("_Power");
-    private void Start() {
+    private void OnEnable() {
         Material tmp = Resources.Load<Material>("traffic_temp");
         material = new Material(tmp);
         Resources.UnloadAsset(tmp);

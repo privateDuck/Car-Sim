@@ -90,43 +90,6 @@ public class Drivetrain{
         float engineTargetRPM = DifferentialToEngineRPM(currentWheelRPM);
 
         if ( type == TransType.Automatic ){
-            
-            /* if (Gear == 0 && throttlePos > 0){
-                ShiftUp();
-            }
-
-            if (engineTargetRPM < stallRPM && throttlePos < 0.05f){
-                clutchPosition = 0;
-                engineRPM = Mathf.Lerp(engineRPM, idleRPM + UnityEngine.Random.Range(-50, 50), dt);
-            }
-
-            else {
-
-                if (shiftTimer > 0.0f) {
-                    shiftTimer -= dt;
-                }
-                else {
-                    clutchPosition = 1.0f;
-                }
-
-                if (engineTargetRPM < idleRPM)                
-                    clutchPosition = Mathf.Clamp(engineTargetRPM, stallRPM, idleRPM) * throttlePos / idleRPM;
-
-                if (engineRPM > shiftUpRPM && shiftTimer <= 0.0f) {
-                    ShiftUp();
-                    engineTargetRPM = DifferentialToEngineRPM(currentWheelRPM);
-                    clutchPosition = 0.0f;
-                    shiftTimer = shiftDelay;
-                }
-                else if (engineRPM < shiftDownRPM && Gear > 1 && shiftTimer <= 0.0f){
-                    ShiftDown();
-                    engineTargetRPM = DifferentialToEngineRPM(currentWheelRPM);
-                    clutchPosition = 0.0f;
-                    shiftTimer = shiftDelay;
-                }
-
-                engineRPM = Mathf.Lerp(engineRPM, engineTargetRPM * clutchPosition + (1 - clutchPosition) * idleRPM, dt); 
-            }*/
             autoTrans.UpdateTrans(this, currentWheelRPM, dt);
         }
 
@@ -238,7 +201,7 @@ public class Drivetrain{
             float rand = UnityEngine.Random.Range(-50, 50);
             engineTargetRPM = Mathf.Clamp(engineTargetRPM, dt.idleRPM, dt.redLine + rand);
 
-            if (dt.throttlePos < 0.05f && Mathf.Abs(currentWheelRPM) < 20) {
+            if (dt.throttlePos < 0.05f && Mathf.Abs(currentWheelRPM) < 20 && dt.Gear > -1) {
                 dt.Gear = 0;
                 trans.ChangeState(new NeutralState());
             }
