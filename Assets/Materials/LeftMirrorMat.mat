@@ -141,6 +141,8 @@ Material:
     - _WorkflowMode: 1
     - _ZWrite: 1
     - _curvature: 0
+    - _curvaturePower: 0.8
+    - _edgeSmoothing: 2.04
     - _isFlipped: 1
     m_Colors:
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
