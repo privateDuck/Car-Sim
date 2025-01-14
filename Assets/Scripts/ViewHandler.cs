@@ -35,6 +35,8 @@ public class ViewHandler : MonoBehaviour
         leftBlindSpot.Init(false);
         leftWide.Init(false);
         rightWide.Init(false);
+        leftBlindSpot.SetAspect();
+        rightBlindSpot.SetAspect();
         ComputeCameras();
     }
 
@@ -126,6 +128,10 @@ public class View
         imageComp.material = renderMat;
         renderMat.SetFloat("_isFlipped", shouldFlipMirror ? 1.0f : 0.0f);
         aspectRatio = (float)textureSize.x / ((float)textureSize.y);
+    }
+
+    public void SetAspect(){
+        aspectRatio = graphicParent.sizeDelta.x / Screen.height;
     }
 
     public void Show(ViewHandler self, AnimationCurve curve) {
