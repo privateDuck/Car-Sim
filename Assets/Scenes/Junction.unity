@@ -767,7 +767,7 @@ GameObject:
   m_Component:
   - component: {fileID: 470158345}
   m_Layer: 0
-  m_Name: Blind_R
+  m_Name: Blind_L
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4480,7 +4480,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4810666898432204153}
   m_Layer: 0
-  m_Name: Blind_L
+  m_Name: Blind_R
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -6167,7 +6167,7 @@ MonoBehaviour:
     imageComp: {fileID: 4626188100679488452}
     shouldRender: 0
   leftBlindSpot:
-    viewTransform: {fileID: 4810666898432204153}
+    viewTransform: {fileID: 470158345}
     graphicParent: {fileID: 2653763674382995490}
     hiddenPos: {x: -350, y: 0}
     shownPos: {x: 0, y: 0}
@@ -6179,7 +6179,7 @@ MonoBehaviour:
     imageComp: {fileID: 4286692382626642798}
     shouldRender: 0
   rightBlindSpot:
-    viewTransform: {fileID: 470158345}
+    viewTransform: {fileID: 4810666898432204153}
     graphicParent: {fileID: 152364149567434084}
     hiddenPos: {x: 350, y: 0}
     shownPos: {x: 0, y: 0}
@@ -6239,8 +6239,8 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 4
   state: 0
-  leftBlindViewKey: 120
-  rightBlindViewKey: 122
+  leftBlindViewKey: 122
+  rightBlindViewKey: 120
   wideViewKey: 9
   animSpeed: 2.5
 --- !u!1 &8108215765720673604
