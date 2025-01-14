@@ -6171,7 +6171,7 @@ MonoBehaviour:
     graphicParent: {fileID: 2653763674382995490}
     hiddenPos: {x: -350, y: 0}
     shownPos: {x: 0, y: 0}
-    textureSize: {x: 256, y: 256}
+    textureSize: {x: 256, y: 400}
     aspectRatio: 1
     fovY: 45
     farClipPlane: 100

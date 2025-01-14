@@ -49,8 +49,7 @@ public class ViewHandler : MonoBehaviour
 
         foreach (View view in views)
         {
-            if (view.shouldRender)
-                view.RenderView(m_cam);
+            view.RenderView(m_cam);
         }
     }
 
@@ -130,53 +129,45 @@ public class View
     }
 
     public void Show(ViewHandler self, AnimationCurve curve) {
-        if (!shouldRender)
+
+        float interp = curve.Evaluate(animationValue);
+        graphicParent.anchoredPosition = Vector2.Lerp(hiddenPos, shownPos, interp);
+        animationValue += Time.deltaTime * self.animSpeed;
+        animationValue = Mathf.Clamp01(animationValue);
+
+        /* if (!shouldRender)
             self.StartCoroutine(Animate(curve, true, self.animSpeed));
-        shouldRender = true;
+        shouldRender = true; */
     }
 
     public void Hide(ViewHandler self, AnimationCurve curve) {
+
+        float interp = curve.Evaluate(animationValue);
+        graphicParent.anchoredPosition = Vector2.Lerp(hiddenPos, shownPos, interp);
+        animationValue -= Time.deltaTime * self.animSpeed;
+        animationValue = Mathf.Clamp01(animationValue);
+/* 
         if (shouldRender)
-            self.StartCoroutine(Animate(curve, false, self.animSpeed));
-        shouldRender = false;
+            self.StartCoroutine(Animate(curve, true, -self.animSpeed));
+        shouldRender = false; */
     }
 
     private IEnumerator Animate(AnimationCurve curve, bool dir, float animSpeed) {
         animationValue = 0.0f;
         while(true) {
-            if (animationValue > 1.0f) break;
-
             float interp = curve.Evaluate(animationValue);
             if (dir)
                 graphicParent.anchoredPosition = Vector2.Lerp(hiddenPos, shownPos, interp);
             else
                 graphicParent.anchoredPosition = Vector2.Lerp(shownPos, hiddenPos, interp);
             animationValue += Time.deltaTime * animSpeed;
+            animationValue = Mathf.Clamp01(animationValue);
             
             yield return new WaitForEndOfFrame();
         }
     }
 
-    /* private bool isVisible() {
-
-    } */
-
-    public Matrix4x4 getProjMat() {
-        /* float tan = Mathf.Tan(fovY * 0.5f);
-        float f = farClipPlane;
-        float n = nearClipPlane;
-
-        float xx = 1.0f / (aspectRatio * tan);
-        float yy = 1.0f / tan;
-        float zz = -(f + n)/(f - n);
-        float zw = -2f * f * n / (f - n);
-
-        Matrix4x4 mat = new Matrix4x4();
-        mat[0, 0] = xx;
-        mat[1, 1] = yy;
-        mat[2, 2] = zz;
-        mat[2, 3] = zw;
-        mat[3, 2] = -1; */
+    public Matrix4x4 GetProjMat() {
         return Matrix4x4.Perspective(fovY, aspectRatio, nearClipPlane, farClipPlane);
     }
 
@@ -186,10 +177,12 @@ public class View
     }
 
     public void RenderView(Camera camera) {
-        camera.projectionMatrix = getProjMat();
-        camera.transform.SetPositionAndRotation(viewTransform.position, viewTransform.rotation);
-        camera.targetTexture = tex;
-        camera.Render();
+        if (animationValue > 0.1f){
+            camera.projectionMatrix = GetProjMat();
+            camera.transform.SetPositionAndRotation(viewTransform.position, viewTransform.rotation);
+            camera.targetTexture = tex;
+            camera.Render();
+        }
     }
 
     private void CreateRT(ref RenderTexture rt, int w, int h, int depth, GraphicsFormat format) {
